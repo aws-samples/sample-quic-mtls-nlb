@@ -1,0 +1,27 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: quic-nlb-demo
+  region: us-west-2
+  version: "1.36"
+
+iam:
+  # OIDC provider is required by the AWS Load Balancer Controller (IRSA)
+  withOIDC: true
+
+managedNodeGroups:
+  - name: ng-default
+    instanceType: t3.medium
+    minSize: 2
+    maxSize: 2
+    desiredCapacity: 2
+    volumeSize: 30
+    labels:
+      role: worker
+    tags:
+      Project: quic-nlb-blog
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["audit", "authenticator", "controllerManager", "scheduler", "api"]

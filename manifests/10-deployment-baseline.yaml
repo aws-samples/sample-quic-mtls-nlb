@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quic-server
+  namespace: quic-example
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: quic-server
+  template:
+    metadata:
+      labels:
+        app: quic-server
+      annotations:
+        # Pod annotation from LBC QUIC guide: tells the controller which container
+        # to inject AWS_LBC_QUIC_SERVER_ID into.
+        service.beta.kubernetes.io/aws-load-balancer-quic-enabled-containers: quic-server
+    spec:
+      containers:
+        - name: quic-server
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+          ports:
+            - name: udp
+              containerPort: 3000
+              protocol: UDP
+          env:
+            - name: LISTEN_ADDR
+              value: ":3000"
+            - name: MTLS_ENABLED
+              value: "false"   # baseline: server-only TLS
+            - name: QUIC_NONCE_LEN
+              value: "8"       # 17-byte DCID = 1 + 8 (server id) + 8 (nonce)
+            - name: TLS_CERT_FILE
+              value: /etc/quic/tls.crt
+            - name: TLS_KEY_FILE
+              value: /etc/quic/tls.key
+            - name: CLIENT_CA_FILE
+              value: /etc/quic/ca.crt
+          volumeMounts:
+            - name: server-tls
+              mountPath: /etc/quic
+              readOnly: true
+      volumes:
+        - name: server-tls
+          secret:
+            secretName: quic-server-tls

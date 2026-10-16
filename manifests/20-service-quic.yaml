@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: quic-service
+  namespace: quic-example
+  annotations:
+    # Annotations reproduced verbatim from the LBC QUIC guide.
+    service.beta.kubernetes.io/aws-load-balancer-name: quic-nlb-demo
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-disable-nlb-sg: "true"
+    service.beta.kubernetes.io/aws-load-balancer-enable-tcp-udp-listener: "true"
+    service.beta.kubernetes.io/aws-load-balancer-quic-enabled-ports: "443"
+spec:
+  type: LoadBalancer
+  loadBalancerClass: service.k8s.aws/nlb
+  ipFamilies: [IPv4]
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: quic
+      port: 443
+      targetPort: 3000
+      protocol: UDP
+    # The LBC combines TCP+UDP on the same port into a single listener via the
+    # enable-tcp-udp-listener annotation, so we advertise TCP even though the
+    # QUIC server only listens on UDP.
+    - name: tcp-fallback
+      port: 443
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    app: quic-server

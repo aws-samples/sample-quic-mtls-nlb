@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quic-example
+  # Namespace label from the LBC QUIC guide — required for Server ID injection
+  labels:
+    elbv2.k8s.aws/quic-server-id-inject: enabled
